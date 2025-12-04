@@ -5,11 +5,10 @@ import pandas as pd
 import argparse
 import torch
 from dotenv import load_dotenv
-from sentence_transformers import SentenceTransformer
-
 from src.download_data import download_dataset
 from src.preprocessing import preprocess_data
 from src.make_positive_query import LLMQueryGenerator
+from sentence_transformers import SentenceTransformer
 
 
 load_dotenv()
