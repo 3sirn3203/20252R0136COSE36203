@@ -1,0 +1,4 @@
+{
+    "embedding_model": "all-mpnet-base-v2",
+    "device": "cuda"
+}
