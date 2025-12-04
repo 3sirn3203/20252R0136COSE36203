@@ -1,4 +1,7 @@
 {
-    "embedding_model": "all-mpnet-base-v2",
+    "embedding": {
+        "model_name": "all-mpnet-base-v2",
+        "batch_size": 256
+    },
     "device": "cuda"
 }

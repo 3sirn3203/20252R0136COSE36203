@@ -42,6 +42,7 @@ if __name__ == "__main__":
 
     model_name = config.get("embedding_model", "all-mpnet-base-v2")
     device = config.get("device", "cpu")
+    batch_size = config.get("batch_size", 512)
 
     if device == "cuda" and not torch.cuda.is_available():
         print("\nCUDA is not available. Using CPU instead.")
@@ -57,13 +58,17 @@ if __name__ == "__main__":
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
     print("\nExample of combined_text:")
-    print(df_preprocessed["combined_text"][0])
+    print(f"{df_preprocessed["combined_text"][0]}\n")
 
     # 임베딩 모델 로드
     model = load_embedding_model(model_name=model_name, device=device)
 
     # # 임베딩 계산
-    embeddings = model.encode(df_preprocessed["combined_text"].tolist(), show_progress_bar=True)
+    embeddings = model.encode(
+        df_preprocessed["combined_text"].tolist(), 
+        batch_size=batch_size,
+        show_progress_bar=True
+    )
     embeddings = np.array(embeddings).astype(np.float32)
 
     print(f"\nembeddings.shape: {embeddings.shape}")
