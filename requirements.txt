@@ -1,2 +1,4 @@
 pandas
 scikit-learn
+kagglehub
+python-dotenv
