@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 
 from src.download_data import download_dataset
 from src.preprocessing import preprocess_data
+from src.make_positive_query import LLMQueryGenerator
 
 
 load_dotenv()
@@ -40,9 +41,22 @@ if __name__ == "__main__":
     config_path = args.config
     config = load_json(config_path)
 
-    model_name = config.get("embedding_model", "all-mpnet-base-v2")
+    embedding_config = config.get("embedding", {})
+    emb_model_name = embedding_config.get("model_name", "all-mpnet-base-v2")
+    emb_batch_size = embedding_config.get("batch_size", 32)
+
+    generate_config = config.get("generate_queries", {})
+    enable_query_generation = generate_config.get("enable", True)
+    output_path = generate_config.get("output_path", "data/pseudo_queries.csv")
+    gen_model_name = generate_config.get("model_name", "unsloth/llama-3-8b-Instruct-bnb-4bit")
+    gen_temperature = generate_config.get("temperature", 0.7)
+    gen_max_tokens = generate_config.get("max_tokens", 128)
+    gen_max_seq_length = generate_config.get("max_seq_length", 2048)
+    gen_load_in_4bit = generate_config.get("load_in_4bit", True)
+    gen_batch_size = generate_config.get("batch_size", 16)
+    gen_max_rows = generate_config.get("max_rows", None)
+
     device = config.get("device", "cpu")
-    batch_size = config.get("batch_size", 512)
 
     if device == "cuda" and not torch.cuda.is_available():
         print("\nCUDA is not available. Using CPU instead.")
@@ -57,18 +71,45 @@ if __name__ == "__main__":
 
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
+    df_preprocessed = df_preprocessed.reset_index(drop=True)
     print("\nExample of combined_text:")
-    print(f"{df_preprocessed["combined_text"][0]}\n")
+    print(f"{df_preprocessed['combined_text'].iloc[0]}")
+
+    # LLM 기반 pseudo query 생성
+    if enable_query_generation:
+        print("\nGenerating pseudo queries with local LLM (FastLanguageModel)...")
+        llm_generator = LLMQueryGenerator(
+            model_name=gen_model_name,
+            temperature=gen_temperature,
+            max_tokens=gen_max_tokens,
+            max_seq_length=gen_max_seq_length,
+            load_in_4bit=gen_load_in_4bit,
+        )
+        df_preprocessed = llm_generator.append_queries(
+            df_preprocessed,
+            text_column="combined_text",
+            batch_size=gen_batch_size,
+            max_rows=gen_max_rows,
+            output_path=output_path,
+        )
+        print(f"\nSaved pseudo queries to {output_path}")
+
+        first_idx = df_preprocessed["pseudo_query"].first_valid_index()
+        if first_idx is not None:
+            sample = df_preprocessed.loc[first_idx]
+            print("\nExample pseudo query:")
+            print(f"row_id={first_idx} | query={sample['pseudo_query']}")
+
 
     # 임베딩 모델 로드
-    model = load_embedding_model(model_name=model_name, device=device)
+    # model = load_embedding_model(model_name=emb_model_name, device=device)
 
     # # 임베딩 계산
-    embeddings = model.encode(
-        df_preprocessed["combined_text"].tolist(), 
-        batch_size=batch_size,
-        show_progress_bar=True
-    )
-    embeddings = np.array(embeddings).astype(np.float32)
+    # embeddings = model.encode(
+    #     df_preprocessed["combined_text"].tolist(), 
+    #     batch_size=emb_batch_size,
+    #     show_progress_bar=True
+    # )
+    # embeddings = np.array(embeddings).astype(np.float32)
 
-    print(f"\nembeddings.shape: {embeddings.shape}")
+    # print(f"\nembeddings.shape: {embeddings.shape}")

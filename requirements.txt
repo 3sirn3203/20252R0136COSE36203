@@ -4,3 +4,5 @@ kagglehub
 python-dotenv
 torch
 sentence-transformers
+groq
+unsloth @ git+https://github.com/unslothai/unsloth.git
