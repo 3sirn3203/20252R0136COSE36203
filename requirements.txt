@@ -2,3 +2,5 @@ pandas
 scikit-learn
 kagglehub
 python-dotenv
+torch
+sentence-transformers

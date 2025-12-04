@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import argparse
+import torch
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
@@ -12,7 +13,7 @@ from src.preprocessing import preprocess_data
 
 load_dotenv()
 
-DATA_PATH = "data/datasets/zynicide/wine-reviews/versions/4/winemag-data-130k-v2.csv"
+DATA_PATH = "data/winemag-data-130k-v2.csv"
 CONFIG_PATH = "src/config/config.json"
 
 
@@ -42,6 +43,10 @@ if __name__ == "__main__":
     model_name = config.get("embedding_model", "all-mpnet-base-v2")
     device = config.get("device", "cpu")
 
+    if device == "cuda" and not torch.cuda.is_available():
+        print("\nCUDA is not available. Using CPU instead.")
+        device = "cpu"
+
     # 데이터 파일이 존재하지 않으면 다운로드
     if not os.path.exists(DATA_PATH):
         download_dataset()
@@ -51,14 +56,14 @@ if __name__ == "__main__":
 
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
-    print("Example of combined_text:")
+    print("\nExample of combined_text:")
     print(df_preprocessed["combined_text"][0])
 
     # 임베딩 모델 로드
     model = load_embedding_model(model_name=model_name, device=device)
 
-    # 임베딩 계산
+    # # 임베딩 계산
     embeddings = model.encode(df_preprocessed["combined_text"].tolist(), show_progress_bar=True)
     embeddings = np.array(embeddings).astype(np.float32)
 
-    print(f"embeddings.shape: {embeddings.shape}")
+    print(f"\nembeddings.shape: {embeddings.shape}")
