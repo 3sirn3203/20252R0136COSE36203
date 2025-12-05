@@ -12,5 +12,6 @@
         "batch_size": 16,
         "max_rows": 119955
     },
-    "device": "cuda"
+    "device": "cuda",
+    "random_state": 42
 }

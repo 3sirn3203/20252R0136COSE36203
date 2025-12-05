@@ -56,6 +56,7 @@ if __name__ == "__main__":
     gen_max_rows = generate_config.get("max_rows", None)
 
     device = config.get("device", "cpu")
+    random_state = config.get("random_state", 42)
 
     if device == "cuda" and not torch.cuda.is_available():
         print("\nCUDA is not available. Using CPU instead.")
@@ -128,5 +129,36 @@ if __name__ == "__main__":
         print("\nLocal test mode: Skipping embedding computation.")
         embeddings = np.random.rand(len(df_preprocessed), 768).astype(np.float32)
 
+    # pseudo query를 DataFrame에 추가
+    df_preprocessed = df_preprocessed.merge(query, left_index=True, right_index=True, how='left')
+    
+    print(f"\nFinal DataFrame shape: {df_preprocessed.shape}")
+    print(f"Columns: {df_preprocessed.columns.tolist()}")
+
     # train, val, test 세트로 분할
-    train_df, 
+    (train_df, train_emb), (val_df, val_emb), (test_df, test_emb) = split_data_by_group(
+        df_preprocessed,
+        embeddings,
+        group_col='title',
+        val_size=0.1,
+        test_size=0.1,
+        random_state=random_state
+    )
+
+    print(f"\nTrain set size: {len(train_df)}")
+    print(f"Validation set size: {len(val_df)}")
+    print(f"Test set size: {len(test_df)}")
+
+    # Data leakage 검사
+    train_titles = set(train_df['title'])
+    test_titles = set(test_df['title'])
+    assert len(train_titles.intersection(test_titles)) == 0, "Data leakage detected between train and test sets!"
+
+    train_triplets = make_triplets(train_df, num_negatives=2, random_state=random_state)
+
+    print(f"\nGenerated {len(train_triplets)} training triplets.")
+    print("Example Triplet:")
+    print(f"Query: {train_triplets[0]['query']}")
+    print(f"Positive: {train_triplets[0]['positive'][:50]}...")
+    print(f"Negative 1: {train_triplets[0]['negatives'][0][:50]}...")
+    print(f"Negative 2: {train_triplets[0]['negatives'][1][:50]}...")
