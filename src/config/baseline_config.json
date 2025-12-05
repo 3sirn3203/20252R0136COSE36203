@@ -1,8 +1,27 @@
 {
-    "model_path": "src/model/baseline_model.py",
-    "embedding": {
+    "generate_queries": {
+        "enable": false,
+        "output_path": "data/pseudo_queries.csv",
+        "model_name": "models/gemini-2.0-flash",
+        "temperature": 0.7,
+        "max_tokens": 1024,
+        "batch_size": 16,
+        "max_rows": 119955
+    },
+    "data": {
+        "path": "data/winemag-data-130k-v2.csv",
+        "query_path": "data/pseudo_queries.csv",
+        "val_size": 0.1,
+        "test_size": 0.1,
+        "num_negatives": 2
+    },
+    "model": {
+        "type": "bi-encoder",
+        "path": "src/model/baseline_model.py",
         "model_name": "all-mpnet-base-v2",
         "batch_size": 256,
         "tok_k": 10
-    }
+    },
+    "device": "cuda",
+    "random_state": 42
 }

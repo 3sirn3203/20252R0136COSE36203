@@ -1,9 +1,9 @@
 import os
 import json
-import numpy as np
 import pandas as pd
 import argparse
 import time
+import warnings
 import torch
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
@@ -17,10 +17,10 @@ from src.make_positive_query import LLMQueryGenerator
 
 
 load_dotenv()
+warnings.filterwarnings("ignore", category=UserWarning, module='pydantic')
 
 DATA_PATH = "data/winemag-data-130k-v2.csv"
-COMMON_CONFIG_PATH = "src/config/common_config.json"
-MODEL_CONFIG_PATH = "src/config/baseline_config.json"
+CONFIG_PATH = "src/config/common_config.json"
 QUERY_PATH = "data/pseudo_queries.csv"
 
 
@@ -38,15 +38,12 @@ def load_embedding_model(model_name: str ="all-mpnet-base-v2", device: str ="cpu
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="와인 리뷰 데이터셋 다운로드 및 전처리")
-    parser.add_argument("--config", type=str, default=COMMON_CONFIG_PATH, help="config 파일 경로")
-    parser.add_argument("--model-config", type=str, default=MODEL_CONFIG_PATH, help="모델 config 파일 경로")
+    parser.add_argument("--config", type=str, default=CONFIG_PATH, help="config 파일 경로")
     parser.add_argument("--local-test", type=bool, default=False, help="로컬 테스트 모드 여부")
     args = parser.parse_args()
 
     config_path = args.config
-    model_config_path = args.model_config
     config = load_json(config_path)
-    model_config = load_json(model_config_path)
 
     gen_query_config = config.get("generate_queries", {})
     enable_query_generation = gen_query_config.get("enable", True)
@@ -63,6 +60,10 @@ if __name__ == "__main__":
     val_size = data_config.get("val_size", 0.1)
     test_size = data_config.get("test_size", 0.1)
     num_negatives = data_config.get("num_negatives", 2)
+
+    model_config = config.get("model", {})
+    top_k = model_config.get("top_k", 10)
+    batch_size = model_config.get("batch_size", 256)
 
     device = config.get("device", "cpu")
     random_state = config.get("random_state", 42)
@@ -175,5 +176,7 @@ if __name__ == "__main__":
     evaluate_biencoder_model(
         model=model,
         full_df=df_preprocessed,
-        test_df=test_df
+        test_df=test_df,
+        top_k=top_k,
+        batch_size=batch_size
     )

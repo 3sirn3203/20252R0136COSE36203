@@ -4,7 +4,7 @@ import importlib.util
 
 def load_model(config: dict, device: str):
     """설정 딕셔너리를 사용하여 모델을 로드하는 함수"""
-    model_path = config.get("model_path", "models/baseline.py")
+    model_path = config.get("path", "models/baseline.py")
     
     # 파일 존재 확인
     if not os.path.exists(model_path):

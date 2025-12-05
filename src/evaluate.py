@@ -1,7 +1,7 @@
 from sentence_transformers import util
 
 
-def evaluate_biencoder_model(model, full_df, test_df, top_k=None, batch_size=None):
+def evaluate_biencoder_model(model, full_df, test_df, top_k=10, batch_size=256):
     """
     Bi-encoder 모델을 평가하는 함수
     """
@@ -11,9 +11,7 @@ def evaluate_biencoder_model(model, full_df, test_df, top_k=None, batch_size=Non
     print(f"1. Encoding Corpus ({len(full_df)} docs)...")
     corpus_embeddings = model.encode(
         full_df['combined_text'].tolist(), 
-        batch_size=batch_size, 
-        show_progress_bar=True,
-        normalize_embeddings=True
+        batch_size=batch_size
     )
     
     # 2. Query Encoding
