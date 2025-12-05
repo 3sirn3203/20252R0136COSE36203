@@ -1,12 +1,9 @@
-import pandas as pd
-
 template = """
-{description}
-This is a {variety} wine from {winery}.
-It is produced in {region_1}, {province}, {country}. 
-The wine is designated as {designation} and received {points} points.
-It is priced at ${price}. 
-This wine was reviewed by {taster_name}.
+Title: {title}
+Description: {description}
+Details: This is a {variety} wine from {winery}.
+Origin: It is produced in {region_1}, {province}, {country}.
+Specs: The wine is designated as {designation} and received {points} points reviewed by {taster_name}. Price is ${price}.
 """
 
 def _remove_duplicates(df):
@@ -78,7 +75,8 @@ def _make_combined_text(df):
             designation=row['designation'],
             points=row['points'],
             price=row['price'],
-            taster_name=row['taster_name']
+            taster_name=row['taster_name'],
+            title=row['title']
         ).strip(),
         axis=1
     )

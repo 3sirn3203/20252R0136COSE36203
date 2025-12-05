@@ -4,11 +4,9 @@ import random
 from sklearn.model_selection import GroupShuffleSplit
 
 
-def split_data_by_group(df, embeddings, group_col='title', 
+def split_data_by_group(df, group_col='title', 
                         val_size=0.1, test_size=0.1, random_state=42):
     """Title을 기준으로 그룹이 섞이지 않게 train, val, test 세트로 분할하는 함수"""
-
-    groups = df[group_col].unique()
 
     df = df.reset_index(drop=True)
 
@@ -18,9 +16,7 @@ def split_data_by_group(df, embeddings, group_col='title',
     train_idx, tmp_idx = next(splitter_1.split(df, groups=df[group_col]))
 
     train_df = df.iloc[train_idx]
-    train_emb = embeddings[train_idx]
     tmp_df = df.iloc[tmp_idx]
-    tmp_emb = embeddings[tmp_idx]
 
     # val - test 분할
     relative_test_size = test_size / test_val_ratio
@@ -28,12 +24,9 @@ def split_data_by_group(df, embeddings, group_col='title',
     val_idx, test_idx = next(splitter_2.split(tmp_df, groups=tmp_df[group_col]))
 
     val_df = tmp_df.iloc[val_idx]
-    val_emb = tmp_emb[val_idx]
     test_df = tmp_df.iloc[test_idx]
-    test_emb = tmp_emb[test_idx]
 
-    return (train_df, train_emb), (val_df, val_emb), (test_df, test_emb)
-
+    return train_df, val_df, test_df
 
 def make_triplets(df_train, num_negatives=2, random_state=42):
     """

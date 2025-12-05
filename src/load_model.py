@@ -2,7 +2,7 @@ import os
 import importlib.util
 
 
-def load_model(config: dict):
+def load_model(config: dict, device: str):
     """설정 딕셔너리를 사용하여 모델을 로드하는 함수"""
     model_path = config.get("model_path", "models/baseline.py")
     
@@ -23,6 +23,6 @@ def load_model(config: dict):
         raise AttributeError(f"'create_model' function not found in {model_path}")
     
     # create_model 함수 호출하여 모델 생성
-    model = model_module.create_model(config)
+    model = model_module.create_model(config, device)
     
     return model    

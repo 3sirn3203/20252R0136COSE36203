@@ -17,7 +17,7 @@ SYSTEM_PROMPT = (
 )
 
 STYLE_VARIANTS = [
-    ("keyword", "Short, direct keywords focusing on region, grape, or price (e.g., 'Napa cabernet under 50')."),
+    ("keyword", "Specific query searching for the brand name, vintage, or exact wine name (e.g., 'Stag's Leap 2013', 'Nicosia Vulka Bianco')."),
     ("natural", "Conversational, describing a taste or feeling (e.g., 'smooth red wine that tastes like chocolate')."),
     ("situation", "Occasion-based or vague request (e.g., 'good wine for steak dinner', 'gift for boss')."),
 ]
@@ -41,7 +41,7 @@ class LLMQueryGenerator:
         api_key: Optional[str] = None,
         model_name: str = "models/gemini-2.0-flash", 
         temperature: float = 0.7,
-        max_tokens: int = 4096, # 넉넉하게 늘림
+        max_tokens: int = 4096,
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:

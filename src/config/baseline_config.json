@@ -1,0 +1,8 @@
+{
+    "model_path": "models/baseline_model",
+    "embedding": {
+        "model_name": "all-mpnet-base-v2",
+        "batch_size": 256,
+        "tok_k": 10
+    }
+}
