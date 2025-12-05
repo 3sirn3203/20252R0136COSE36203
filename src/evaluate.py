@@ -23,8 +23,6 @@ def evaluate_biencoder_model(model, full_df, test_df, top_k=10, batch_size=256):
     query_embeddings = model.encode(
         query_subset['pseudo_query'].tolist(), 
         batch_size=batch_size,
-        show_progress_bar=True,
-        normalize_embeddings=True
     )
     
     # 3. Retrieval (평가 함수가 직접 검색 수행)

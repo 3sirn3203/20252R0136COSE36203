@@ -6,7 +6,6 @@ import time
 import warnings
 import torch
 from dotenv import load_dotenv
-from sentence_transformers import SentenceTransformer
 
 from src.download_data import download_dataset
 from src.preprocessing import preprocess_data
@@ -20,7 +19,7 @@ load_dotenv()
 warnings.filterwarnings("ignore", category=UserWarning, module='pydantic')
 
 DATA_PATH = "data/winemag-data-130k-v2.csv"
-CONFIG_PATH = "src/config/common_config.json"
+CONFIG_PATH = "src/config/baseline_config.json"
 QUERY_PATH = "data/pseudo_queries.csv"
 
 
@@ -29,11 +28,6 @@ def load_json(file_path: str):
     with open(file_path, 'r') as f:
         data = json.load(f)
     return data
-
-def load_embedding_model(model_name: str ="all-mpnet-base-v2", device: str ="cpu") -> SentenceTransformer:
-    """사전 학습된 문장 임베딩 모델을 로드하는 함수"""
-    model = SentenceTransformer(model_name, device=device)
-    return model
 
 
 if __name__ == "__main__":
@@ -82,7 +76,6 @@ if __name__ == "__main__":
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
     df_preprocessed = df_preprocessed.reset_index(drop=True)
-    print(f"\nTotal rows after preprocessing: {len(df_preprocessed)}")
     print("\nExample of combined_text:")
     print(f"{df_preprocessed['combined_text'].iloc[0]}")
 
