@@ -36,20 +36,19 @@ Output JSON: {"id": 102, "query": "refreshing white wine citrusy and sweet"}
 """
 
 class LLMQueryGenerator:
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        model_name: str = "models/gemini-2.0-flash", 
-        temperature: float = 0.7,
-        max_tokens: int = 4096,
-    ):
+    def __init__(self, gen_query_config: Dict, api_key: Optional[str] = None):
+
+        self.gen_query_config = gen_query_config
+        self.model_name = gen_query_config.get("model_name", "models/gemini-2.0-flash")
+        self.temperature = gen_query_config.get("temperature", 0.7)
+        self.max_tokens = gen_query_config.get("max_tokens", 1024)
+        self.batch_size = gen_query_config.get("batch_size", 16)
+        self.max_rows = gen_query_config.get("max_rows", None)
+        self.output_path = gen_query_config.get("output_path", "data/pseudo_queries.csv")
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set.")
-
-        self.model_name = model_name
-        self.temperature = temperature
-        self.max_tokens = max_tokens
 
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(
@@ -169,29 +168,22 @@ class LLMQueryGenerator:
         print(f"[Fail] Failed to generate for batch IDs: {expected_ids[:3]}...")
         return {}
 
-    def append_queries(
-        self,
-        df: pd.DataFrame,
-        text_column: str = "combined_text",
-        batch_size: int = 30,
-        max_rows: Optional[int] = None,
-        output_path: Optional[str] = None,
-    ) -> pd.DataFrame:
+    def append_queries(self, df: pd.DataFrame, text_column: str = "combined_text") -> pd.DataFrame:
         
         df_result = df.copy()
         if "pseudo_query" not in df_result.columns:
             df_result["pseudo_query"] = pd.NA
 
-        working_df = df_result if max_rows is None else df_result.iloc[:max_rows]
+        working_df = df_result if self.max_rows is None else df_result.iloc[:self.max_rows]
         total_rows = len(working_df)
 
-        print(f"Starting generation for {total_rows} rows (Batch Size: {batch_size})...")
+        print(f"Starting generation for {total_rows} rows (Batch Size: {self.batch_size})...")
+    
+        if self.output_path:
+            os.makedirs(os.path.dirname(self.output_path) or ".", exist_ok=True)
 
-        if output_path:
-            os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-
-        for start in range(0, total_rows, batch_size):
-            end = start + batch_size
+        for start in range(0, total_rows, self.batch_size):
+            end = start + self.batch_size
             batch_df = working_df.iloc[start:end]
             payload = [(int(idx), str(text)) for idx, text in zip(batch_df.index, batch_df[text_column])]
 
@@ -202,20 +194,20 @@ class LLMQueryGenerator:
                 df_result.at[idx, "pseudo_query"] = query
 
             # 진행 상황 출력
-            if (start // batch_size) % 2 == 0:
+            if (start // self.batch_size) % 5 == 0:
                 print(f"[Progress] {min(end, total_rows)}/{total_rows} | Generated: {len(batch_queries)}/{len(payload)}")
 
             # 중간 저장
-            if output_path:
+            if self.output_path:
                 subset = df_result.loc[
                     df_result["pseudo_query"].notna(), 
                     ["pseudo_query"] 
                 ].reset_index()
                 subset.rename(columns={"index": "row_id"}, inplace=True)
-                subset.to_csv(output_path, index=False)
+                subset.to_csv(self.output_path, index=False)
 
             # Sleep Time
             time.sleep(3)
 
-        print(f"\n[Complete] All tasks finished. Final data saved to {output_path}")
-        return df_result
+        print(f"\n[Complete] All tasks finished. Final data saved to {self.output_path}")
+        return self.output_path

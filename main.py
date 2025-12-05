@@ -41,23 +41,17 @@ if __name__ == "__main__":
 
     gen_query_config = config.get("generate_queries", {})
     enable_query_generation = gen_query_config.get("enable", True)
-    output_path = gen_query_config.get("output_path", QUERY_PATH)
-    gen_model_name = gen_query_config.get("model_name", "gemini-1.5-pro")
-    gen_temperature = gen_query_config.get("temperature", 0.7)
-    gen_max_tokens = gen_query_config.get("max_tokens", 512)
-    gen_batch_size = gen_query_config.get("batch_size", 16)
-    gen_max_rows = gen_query_config.get("max_rows", None)
 
     data_config = config.get("data", {})
     data_path = data_config.get("path", DATA_PATH)
+    embedding_path = data_config.get("embedding_path", None)
     query_path = data_config.get("query_path", QUERY_PATH)
     val_size = data_config.get("val_size", 0.1)
     test_size = data_config.get("test_size", 0.1)
     num_negatives = data_config.get("num_negatives", 2)
 
     model_config = config.get("model", {})
-    top_k = model_config.get("top_k", 10)
-    batch_size = model_config.get("batch_size", 256)
+    evaluate_config = config.get("evaluate", {})
 
     device = config.get("device", "cpu")
     random_state = config.get("random_state", 42)
@@ -89,17 +83,12 @@ if __name__ == "__main__":
         q_start = time.time()
         print("\nGenerating pseudo queries with Gemini LLM...")
         llm_generator = LLMQueryGenerator(
+            gen_query_config=gen_query_config,
             api_key=GEMINI_API_KEY,
-            model_name=gen_model_name,
-            temperature=gen_temperature,
-            max_tokens=gen_max_tokens,
         )
-        df_preprocessed = llm_generator.append_queries(
+        query_path = llm_generator.append_queries(
             df_preprocessed,
-            text_column="combined_text",
-            batch_size=gen_batch_size,
-            max_rows=gen_max_rows,
-            output_path=output_path,
+            text_column="combined_text"
         )
         q_end = time.time()
         elapsed = q_end - q_start
@@ -112,9 +101,9 @@ if __name__ == "__main__":
             print(f"row_id={first_idx} | query={sample['pseudo_query']}")
 
     # 이미 생성된 pseudo query 불러오기
-    if os.path.exists(output_path):
-        query = pd.read_csv(output_path)
-        print(f"\nLoaded {len(query)} pseudo queries from {output_path}")
+    if os.path.exists(query_path):
+        query = pd.read_csv(query_path)
+        print(f"\nLoaded {len(query)} pseudo queries from {query_path}")
 
     # pseudo query를 DataFrame에 추가
     df_preprocessed = df_preprocessed.merge(query, left_index=True, right_index=True, how='left')
@@ -164,12 +153,17 @@ if __name__ == "__main__":
     print(f"  Negative 1: {train_triplets[0]['negatives'][0][:50]}...")
     print(f"  Negative 2: {train_triplets[0]['negatives'][1][:50]}...")
 
-    model = load_model(model_config, device)
+    model = load_model(
+        model_config=model_config, 
+        train_triplets=train_triplets,
+        val_df=val_df,
+        device=device,
+    )
 
     evaluate_biencoder_model(
         model=model,
+        embedding_path=embedding_path,
         full_df=df_preprocessed,
         test_df=test_df,
-        top_k=top_k,
-        batch_size=batch_size
+        evaluate_config=evaluate_config,
     )
