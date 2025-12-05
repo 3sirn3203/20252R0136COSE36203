@@ -60,7 +60,7 @@ def create_model(model_config: dict,
     model = SentenceTransformer(model_name, device=device)
     model.max_seq_length = max_seq_length
 
-    print(f"\nPreparing training with {len(train_triplets)} triplets...")
+    print(f"Preparing training with {len(train_triplets)} triplets...")
     train_examples = []
     for triplet in train_triplets:
         query = triplet['query']
@@ -71,7 +71,7 @@ def create_model(model_config: dict,
     train_dataloader = DataLoader(train_examples, batch_size=train_batch_size, shuffle=True)
 
     # 손실 함수 설정
-    print(f"\nUsing loss function: {loss_function}...")
+    print(f"Using loss function: {loss_function}...")
     if loss_function == "TripletLoss":
         train_loss = losses.TripletLoss(
             model=model,
@@ -84,7 +84,7 @@ def create_model(model_config: dict,
         raise ValueError(f"Unsupported loss function: {loss_function}")
     
     # Evaluator 설정
-    print("\nSetting up evaluator...")
+    print("Setting up evaluator...")
     val_queries_df = val_df[val_df['pseudo_query'].notna()]
 
     queries = {str(i): q for i, q in zip(val_queries_df.index, val_queries_df['pseudo_query'])}
@@ -100,7 +100,7 @@ def create_model(model_config: dict,
     )
 
     # 학습 시작
-    print(f"Starting training for {epochs} epochs...")
+    print(f"\nStarting training for {epochs} epochs...")
 
     if warmup_steps is None or warmup_steps <= 0:
         warmup_steps = int(len(train_dataloader) * epochs * 0.1)
