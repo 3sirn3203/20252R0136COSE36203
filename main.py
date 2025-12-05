@@ -12,6 +12,7 @@ from src.download_data import download_dataset
 from src.preprocessing import preprocess_data
 from src.load_dataset import split_data_by_group, make_triplets
 from src.load_model import load_model
+from src.evaluate import evaluate_biencoder_model
 from src.make_positive_query import LLMQueryGenerator
 
 
@@ -170,3 +171,9 @@ if __name__ == "__main__":
     print(f"  Negative 2: {train_triplets[0]['negatives'][1][:50]}...")
 
     model = load_model(model_config, device)
+
+    evaluate_biencoder_model(
+        model=model,
+        full_df=df_preprocessed,
+        test_df=test_df
+    )

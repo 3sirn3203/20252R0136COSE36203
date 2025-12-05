@@ -1,5 +1,5 @@
 {
-    "model_path": "models/baseline_model",
+    "model_path": "src/model/baseline_model.py",
     "embedding": {
         "model_name": "all-mpnet-base-v2",
         "batch_size": 256,

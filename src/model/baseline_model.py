@@ -31,18 +31,6 @@ class BaselineModel:
         )
         return embeddings
 
-    def search(self, query_embeddings, corpus_embeddings, top_k=None):
-        """
-        Query 벡터와 Corpus 벡터 간의 유사도를 계산하여 Top-K 결과를 반환
-        util.semantic_search는 내부적으로 GPU를 사용하여 매우 빠름
-        """
-        hits = util.semantic_search(
-            query_embeddings, 
-            corpus_embeddings, 
-            top_k=top_k or self.tok_k,
-            score_function=util.cos_sim
-        )
-        return hits
 
 def create_model(config: dict, device: str) -> BaselineModel:
     """Config 설정을 받아 모델 생성"""
