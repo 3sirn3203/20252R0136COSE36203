@@ -45,7 +45,7 @@ class LLMQueryGenerator:
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY 환경 변수가 필요합니다.")
+            raise ValueError("GEMINI_API_KEY environment variable is not set.")
 
         self.model_name = model_name
         self.temperature = temperature

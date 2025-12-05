@@ -4,7 +4,7 @@
         "batch_size": 256
     },
     "generate_queries": {
-        "enable": true,
+        "enable": false,
         "output_path": "data/pseudo_queries.csv",
         "model_name": "models/gemini-2.0-flash",
         "temperature": 0.7,

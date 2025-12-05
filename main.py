@@ -11,6 +11,7 @@ from sentence_transformers import SentenceTransformer
 from src.download_data import download_dataset
 from src.preprocessing import preprocess_data
 from src.make_positive_query import LLMQueryGenerator
+from src.load_dataset import split_data_by_group, make_triplets
 
 
 load_dotenv()
@@ -18,7 +19,6 @@ load_dotenv()
 DATA_PATH = "data/winemag-data-130k-v2.csv"
 CONFIG_PATH = "src/config/config.json"
 QUERY_PATH = "data/pseudo_queries.csv"
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 def load_json(file_path: str):
@@ -36,6 +36,7 @@ def load_embedding_model(model_name: str ="all-mpnet-base-v2", device: str ="cpu
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="와인 리뷰 데이터셋 다운로드 및 전처리")
     parser.add_argument("--config", type=str, default=CONFIG_PATH, help="config 파일 경로")
+    parser.add_argument("--local-test", type=bool, default=False, help="로컬 테스트 모드 여부")
     args = parser.parse_args()
 
     config_path = args.config
@@ -66,16 +67,21 @@ if __name__ == "__main__":
     
     # 데이터 불러오기
     df = pd.read_csv(DATA_PATH)
-    
+
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
     df_preprocessed = df_preprocessed.reset_index(drop=True)
     print(f"\nTotal rows after preprocessing: {len(df_preprocessed)}")
-    print("Example of combined_text:")
+    print("\nExample of combined_text:")
     print(f"{df_preprocessed['combined_text'].iloc[0]}")
 
     # LLM 기반 pseudo query 생성
     if enable_query_generation:
+        # API 키 확인
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+        if not GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY not found in environment variables. Please set it in .env file.")
+        
         q_start = time.time()
         print("\nGenerating pseudo queries with Gemini LLM...")
         llm_generator = LLMQueryGenerator(
@@ -101,20 +107,26 @@ if __name__ == "__main__":
             print("\nExample pseudo query:")
             print(f"row_id={first_idx} | query={sample['pseudo_query']}")
 
+    # 이미 생성된 pseudo query 불러오기
     if os.path.exists(output_path):
         query = pd.read_csv(output_path)
         print(f"\nLoaded {len(query)} pseudo queries from {output_path}")
 
+    if not args.local_test:
+        # 임베딩 모델 로드
+        model = load_embedding_model(model_name=emb_model_name, device=device)
 
-    # 임베딩 모델 로드
-    # model = load_embedding_model(model_name=emb_model_name, device=device)
+        # 임베딩 계산
+        embeddings = model.encode(
+            df_preprocessed["combined_text"].tolist(), 
+            batch_size=emb_batch_size,
+            show_progress_bar=True
+        )
+        embeddings = np.array(embeddings).astype(np.float32)
+        print(f"\nembeddings.shape: {embeddings.shape}")
+    else:
+        print("\nLocal test mode: Skipping embedding computation.")
+        embeddings = np.random.rand(len(df_preprocessed), 768).astype(np.float32)
 
-    # # 임베딩 계산
-    # embeddings = model.encode(
-    #     df_preprocessed["combined_text"].tolist(), 
-    #     batch_size=emb_batch_size,
-    #     show_progress_bar=True
-    # )
-    # embeddings = np.array(embeddings).astype(np.float32)
-
-    # print(f"\nembeddings.shape: {embeddings.shape}")
+    # train, val, test 세트로 분할
+    train_df, 
