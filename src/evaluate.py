@@ -4,12 +4,12 @@ import numpy as np
 from typing import Dict
 from sentence_transformers import util
 
-def evaluate_biencoder_model(model, embedding_path, 
-                             full_df, test_df, evaluate_config: Dict):
+def evaluate_biencoder_model(model, full_df, test_df, evaluate_config: Dict):
     
     """Bi-encoder 모델 평가 함수"""
     top_k = evaluate_config.get("top_k", 10)
     batch_size = evaluate_config.get("batch_size", 256)
+    embedding_path = evaluate_config.get("embedding_path", None)
     
     embedding_dim = model.get_sentence_embedding_dimension()
 

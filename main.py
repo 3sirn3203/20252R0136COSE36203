@@ -44,13 +44,13 @@ if __name__ == "__main__":
 
     data_config = config.get("data", {})
     data_path = data_config.get("path", DATA_PATH)
-    embedding_path = data_config.get("embedding_path", None)
     query_path = data_config.get("query_path", QUERY_PATH)
     val_size = data_config.get("val_size", 0.1)
     test_size = data_config.get("test_size", 0.1)
     num_negatives = data_config.get("num_negatives", 2)
 
     model_config = config.get("model", {})
+    train_config = config.get("train", {})
     evaluate_config = config.get("evaluate", {})
 
     device = config.get("device", "cpu")
@@ -155,14 +155,15 @@ if __name__ == "__main__":
 
     model = load_model(
         model_config=model_config, 
+        train_config=train_config,
         train_triplets=train_triplets,
         val_df=val_df,
         device=device,
+        random_state=random_state,
     )
 
     evaluate_biencoder_model(
         model=model,
-        embedding_path=embedding_path,
         full_df=df_preprocessed,
         test_df=test_df,
         evaluate_config=evaluate_config,

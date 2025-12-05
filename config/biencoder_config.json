@@ -10,28 +10,39 @@
     },
     "data": {
         "path": "data/winemag-data-130k-v2.csv",
-        "embedding_path": "data/embeddings/baseline_faiss.index",
         "query_path": "data/pseudo_queries.csv",
         "val_size": 0.1,
         "test_size": 0.1,
         "num_negatives": 2
     },
     "model": {
-        "type": "bi-encoder",
+        "type": "baseline-bi-encoder",
         "path": "src/model/baseline_model.py",
         "model_name": "all-mpnet-base-v2",
-        "batch_size": 256,
-        "top_k": 10
+        "max_seq_length": 256,
+        "pooling_mode": "mean"
     },
     "train": {
+        "re_train": true,
         "epochs": 3,
         "learning_rate": 2e-5,
-        "warmup_steps": null,
+        "scheduler": "WarmupLinear",
+        "warmup_steps": 1000,
         "train_batch_size": 32,
         "gradient_accumulation": 1,
-        "triplet_margin": 0.5,
+        "weight_decay": 0.01,
+        "max_grad_norm": 1.0,
         "use_amp": true,
-        "output_dir": "models/bi-encoder-trained"
+        "loss_function": "TripletLoss",
+        "triplet_margin": 0.5,
+        "output_dir": "models/bi-encoder-trained",
+        "eval_steps": 500,
+        "save_best_model": true
+    },
+    "evaluate": {
+        "top_k": 10,
+        "batch_size": 256,
+        "embedding_path": "data/embeddings/baseline_faiss.index"
     },
     "device": "cuda",
     "random_state": 42
