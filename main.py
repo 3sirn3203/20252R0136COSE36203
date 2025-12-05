@@ -25,6 +25,7 @@ QUERY_PATH = "data/pseudo_queries.csv"
 
 def load_json(file_path: str):
     """JSON 파일을 읽어 딕셔너리로 반환하는 함수"""
+    print(f"Loading JSON config from: {file_path}")
     with open(file_path, 'r') as f:
         data = json.load(f)
     return data

@@ -37,7 +37,6 @@ def create_model(model_config: dict,
     scheduler = train_config.get("scheduler", "WarmupLinear")
     warmup_steps = train_config.get("warmup_steps", 1000)
     train_batch_size = train_config.get("train_batch_size", 32)
-    gradient_accumulation = train_config.get("gradient_accumulation", 1)
     weight_decay = train_config.get("weight_decay", 0.01)
     max_grad_norm = train_config.get("max_grad_norm", 1.0)
     use_amp = train_config.get("use_amp", True)
@@ -113,7 +112,6 @@ def create_model(model_config: dict,
         steps_per_epoch=None,
         warmup_steps=warmup_steps,
         optimizer_params={'lr': learning_rate},
-        gradient_accumulation_steps=gradient_accumulation,
         weight_decay=weight_decay,
         evaluation_steps=eval_steps,
         output_path=output_dir,

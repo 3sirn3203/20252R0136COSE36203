@@ -17,7 +17,7 @@
     },
     "model": {
         "type": "baseline-bi-encoder",
-        "path": "src/model/baseline_model.py",
+        "path": "src/model/biencoder_learning.py",
         "model_name": "all-mpnet-base-v2",
         "max_seq_length": 256
     },
@@ -28,7 +28,6 @@
         "scheduler": "WarmupLinear",
         "warmup_steps": 1000,
         "train_batch_size": 32,
-        "gradient_accumulation": 1,
         "weight_decay": 0.01,
         "max_grad_norm": 1.0,
         "use_amp": true,
