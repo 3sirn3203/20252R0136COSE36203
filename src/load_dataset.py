@@ -8,7 +8,7 @@ def split_data_by_group(df, embeddings, group_col='title',
                         val_size=0.1, test_size=0.1, random_state=42):
     """Title을 기준으로 그룹이 섞이지 않게 train, val, test 세트로 분할하는 함수"""
 
-    groups = df[group_col].values
+    groups = df[group_col].unique()
 
     df = df.reset_index(drop=True)
 
