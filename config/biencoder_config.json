@@ -19,8 +19,7 @@
         "type": "baseline-bi-encoder",
         "path": "src/model/baseline_model.py",
         "model_name": "all-mpnet-base-v2",
-        "max_seq_length": 256,
-        "pooling_mode": "mean"
+        "max_seq_length": 256
     },
     "train": {
         "re_train": true,

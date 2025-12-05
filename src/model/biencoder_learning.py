@@ -18,7 +18,7 @@ def set_seed(seed: int):
     torch.cuda.manual_seed_all(seed)
 
 
-def create_model(config: dict,
+def create_model(model_config: dict,
                  train_config: dict,
                  train_triplets, 
                  val_df, 
@@ -28,9 +28,9 @@ def create_model(config: dict,
     """Config 설정을 받아 모델 생성"""
     set_seed(random_state)
     
-    model_name = config.get("model_name", "all-mpnet-base-v2")
+    model_name = model_config.get("model_name", "all-mpnet-base-v2")
+    max_seq_length = model_config.get("max_seq_length", 256)
 
-    train_config = config.get("train", {})
     re_train = train_config.get("re_train", True)
     epochs = train_config.get("epochs", 1)
     learning_rate = train_config.get("learning_rate", 2e-5)
@@ -53,10 +53,13 @@ def create_model(config: dict,
 
     if not re_train and output_dir and os.path.exists(output_dir):
         print(f"\nLoading existing model from {output_dir} (re_train=False).")
-        return SentenceTransformer(output_dir, device=device)
+        model = SentenceTransformer(output_dir, device=device)
+        model.max_seq_length = max_seq_length
+        return model
 
     print(f"\nCreating model '{model_name}' on device '{device}'...")
     model = SentenceTransformer(model_name, device=device)
+    model.max_seq_length = max_seq_length
 
     print(f"\nPreparing training with {len(train_triplets)} triplets...")
     train_examples = []
