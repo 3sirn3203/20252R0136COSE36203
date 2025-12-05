@@ -3,18 +3,22 @@ import json
 import numpy as np
 import pandas as pd
 import argparse
+import time
 import torch
 from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
+
 from src.download_data import download_dataset
 from src.preprocessing import preprocess_data
 from src.make_positive_query import LLMQueryGenerator
-from sentence_transformers import SentenceTransformer
 
 
 load_dotenv()
 
 DATA_PATH = "data/winemag-data-130k-v2.csv"
 CONFIG_PATH = "src/config/config.json"
+QUERY_PATH = "data/pseudo_queries.csv"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 def load_json(file_path: str):
@@ -23,14 +27,11 @@ def load_json(file_path: str):
         data = json.load(f)
     return data
 
-def read_csv(file_path: str):
-    """CSV 파일을 읽어 DataFrame으로 반환하는 함수"""
-    return pd.read_csv(file_path)
-
 def load_embedding_model(model_name: str ="all-mpnet-base-v2", device: str ="cpu") -> SentenceTransformer:
     """사전 학습된 문장 임베딩 모델을 로드하는 함수"""
     model = SentenceTransformer(model_name, device=device)
     return model
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="와인 리뷰 데이터셋 다운로드 및 전처리")
@@ -46,12 +47,10 @@ if __name__ == "__main__":
 
     generate_config = config.get("generate_queries", {})
     enable_query_generation = generate_config.get("enable", True)
-    output_path = generate_config.get("output_path", "data/pseudo_queries.csv")
-    gen_model_name = generate_config.get("model_name", "unsloth/llama-3-8b-Instruct-bnb-4bit")
+    output_path = generate_config.get("output_path", QUERY_PATH)
+    gen_model_name = generate_config.get("model_name", "gemini-1.5-pro")
     gen_temperature = generate_config.get("temperature", 0.7)
-    gen_max_tokens = generate_config.get("max_tokens", 128)
-    gen_max_seq_length = generate_config.get("max_seq_length", 2048)
-    gen_load_in_4bit = generate_config.get("load_in_4bit", True)
+    gen_max_tokens = generate_config.get("max_tokens", 512)
     gen_batch_size = generate_config.get("batch_size", 16)
     gen_max_rows = generate_config.get("max_rows", None)
 
@@ -66,23 +65,24 @@ if __name__ == "__main__":
         download_dataset()
     
     # 데이터 불러오기
-    df = read_csv(DATA_PATH)
-
+    df = pd.read_csv(DATA_PATH)
+    
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
     df_preprocessed = df_preprocessed.reset_index(drop=True)
-    print("\nExample of combined_text:")
+    print(f"\nTotal rows after preprocessing: {len(df_preprocessed)}")
+    print("Example of combined_text:")
     print(f"{df_preprocessed['combined_text'].iloc[0]}")
 
     # LLM 기반 pseudo query 생성
     if enable_query_generation:
-        print("\nGenerating pseudo queries with local LLM (FastLanguageModel)...")
+        q_start = time.time()
+        print("\nGenerating pseudo queries with Gemini LLM...")
         llm_generator = LLMQueryGenerator(
+            api_key=GEMINI_API_KEY,
             model_name=gen_model_name,
             temperature=gen_temperature,
             max_tokens=gen_max_tokens,
-            max_seq_length=gen_max_seq_length,
-            load_in_4bit=gen_load_in_4bit,
         )
         df_preprocessed = llm_generator.append_queries(
             df_preprocessed,
@@ -91,13 +91,19 @@ if __name__ == "__main__":
             max_rows=gen_max_rows,
             output_path=output_path,
         )
-        print(f"\nSaved pseudo queries to {output_path}")
+        q_end = time.time()
+        elapsed = q_end - q_start
+        print(f"Query generation elapsed time: {elapsed:.2f} seconds")
 
         first_idx = df_preprocessed["pseudo_query"].first_valid_index()
         if first_idx is not None:
             sample = df_preprocessed.loc[first_idx]
             print("\nExample pseudo query:")
             print(f"row_id={first_idx} | query={sample['pseudo_query']}")
+
+    if os.path.exists(output_path):
+        query = pd.read_csv(output_path)
+        print(f"\nLoaded {len(query)} pseudo queries from {output_path}")
 
 
     # 임베딩 모델 로드

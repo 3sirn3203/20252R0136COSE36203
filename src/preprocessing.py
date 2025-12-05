@@ -11,7 +11,7 @@ This wine was reviewed by {taster_name}.
 
 def _remove_duplicates(df):
     """중복 레코드 제거"""
-    df_cleaned = df.drop_duplicates()
+    df_cleaned = df.drop_duplicates(subset='description', keep='first')
     return df_cleaned
 
 def _remove_unnecessary_features(df):
