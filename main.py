@@ -7,19 +7,19 @@ import warnings
 import torch
 from dotenv import load_dotenv
 
-from src.download_data import download_dataset
-from src.preprocessing import preprocess_data
-from src.load_dataset import split_data_by_group, make_triplets
-from src.load_model import load_model
+from src.data.downloader import download_dataset
+from src.data.preprocessing import preprocess_data
+from src.data.data_loader import split_data_by_group, make_triplets
+from src.model_loader import load_model
 from src.evaluate import evaluate_biencoder_model
-from src.make_positive_query import LLMQueryGenerator
+from src.data.query_generator import LLMQueryGenerator
 
 
 load_dotenv()
 warnings.filterwarnings("ignore", category=UserWarning, module='pydantic')
 
 DATA_PATH = "data/winemag-data-130k-v2.csv"
-CONFIG_PATH = "src/config/baseline_config.json"
+CONFIG_PATH = "config/baseline_config.json"
 QUERY_PATH = "data/pseudo_queries.csv"
 
 
