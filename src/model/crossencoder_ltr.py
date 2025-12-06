@@ -225,7 +225,8 @@ def create_model(model_config: dict,
         train_config=bi_train_config, 
         train_triplets=train_triplets, 
         val_df=val_df, 
-        device=device
+        device=device,
+        random_state=random_state
     )
     
     # 2. Cross-Encoder 학습
