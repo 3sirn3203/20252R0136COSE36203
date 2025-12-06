@@ -1,0 +1,9 @@
+{
+    "enable": false,
+    "output_path": "data/pseudo_queries.csv",
+    "model_name": "models/gemini-2.0-flash",
+    "temperature": 0.7,
+    "max_tokens": 1024,
+    "batch_size": 16,
+    "max_rows": 31904
+}

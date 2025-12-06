@@ -19,6 +19,7 @@ load_dotenv()
 warnings.filterwarnings("ignore", category=UserWarning, module='pydantic')
 
 DATA_PATH = "data/winemag-data-130k-v2.csv"
+GEN_QUERY_CONFIG_PATH = "config/generate_query.json"
 CONFIG_PATH = "config/biencoder_baseline.json"
 QUERY_PATH = "data/pseudo_queries.csv"
 
@@ -34,13 +35,15 @@ def load_json(file_path: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="와인 리뷰 데이터셋 다운로드 및 전처리")
     parser.add_argument("--config", type=str, default=CONFIG_PATH, help="config 파일 경로")
+    parser.add_argument("--gen-query", type=str, default=GEN_QUERY_CONFIG_PATH, help="pseudo query 생성 config 파일 경로")
     parser.add_argument("--local-test", type=bool, default=False, help="로컬 테스트 모드 여부")
     args = parser.parse_args()
 
     config_path = args.config
     config = load_json(config_path)
 
-    gen_query_config = config.get("generate_queries", {})
+    gen_query_config_path = args.gen_query
+    gen_query_config = load_json(gen_query_config_path)
     enable_query_generation = gen_query_config.get("enable", True)
 
     data_config = config.get("data", {})
