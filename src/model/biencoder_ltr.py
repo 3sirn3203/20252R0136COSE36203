@@ -56,7 +56,7 @@ def create_model(model_config: dict,
         model.max_seq_length = max_seq_length
         return model
 
-    print(f"\nCreating model '{model_name}' on device '{device}'...")
+    print(f"\nCreating biencoder model '{model_name}' on device '{device}'...")
     model = SentenceTransformer(model_name, device=device)
     model.max_seq_length = max_seq_length
 

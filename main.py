@@ -11,7 +11,7 @@ from src.data.downloader import download_dataset
 from src.data.preprocessing import preprocess_data
 from src.data.data_loader import split_data_by_group, make_triplets
 from src.model_loader import load_model
-from src.evaluate import evaluate_biencoder_model
+from src.evaluate import evaluate_biencoder_model, evalute_two_stage_model
 from src.data.query_generator import LLMQueryGenerator
 
 
@@ -54,6 +54,7 @@ if __name__ == "__main__":
     train_config = config.get("train", {})
     evaluate_config = config.get("evaluate", {})
 
+    model_type = model_config.get("type", "single-stage-retriever")
     device = config.get("device", "cpu")
     random_state = config.get("random_state", 42)
 
@@ -163,9 +164,19 @@ if __name__ == "__main__":
         random_state=random_state,
     )
 
-    evaluate_biencoder_model(
-        model=model,
-        full_df=df_preprocessed,
-        test_df=test_df,
-        evaluate_config=evaluate_config,
-    )
+    if model_type == "single-stage-retriever":
+        evaluate_biencoder_model(
+            model=model,
+            full_df=df_preprocessed,
+            test_df=test_df,
+            evaluate_config=evaluate_config,
+        )
+    elif model_type == "two-stage-retriever":
+        evalute_two_stage_model(
+            model=model,
+            full_df=df_preprocessed,
+            test_df=test_df,
+            evaluate_config=evaluate_config,
+        )
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")

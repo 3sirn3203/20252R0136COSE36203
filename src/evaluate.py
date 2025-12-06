@@ -1,12 +1,12 @@
 import os
 import faiss
 import numpy as np
+from tqdm import tqdm
 from typing import Dict
-from sentence_transformers import util
+
 
 def evaluate_biencoder_model(model, full_df, test_df, evaluate_config: Dict):
-    
-    """Bi-encoder 모델 평가 함수"""
+    """Single-stage Bi-encoder 모델 평가 함수"""
     top_k = evaluate_config.get("top_k", 10)
     batch_size = evaluate_config.get("batch_size", 256)
     embedding_path = evaluate_config.get("embedding_path", None)
@@ -16,16 +16,15 @@ def evaluate_biencoder_model(model, full_df, test_df, evaluate_config: Dict):
     print(f"\n[Evaluation] Start Evaluation @ K={top_k}")
     
     # 1. Corpus Indexing (Load Cache or Compute & Save)
-    index = None
-    
     if embedding_path:
         os.makedirs(os.path.dirname(embedding_path), exist_ok=True)
 
     # 캐시된 인덱스가 존재하는 경우 불러옴
+    index = None
     if embedding_path and os.path.exists(embedding_path):
         print(f"1. Loading existing FAISS index from {embedding_path}...")
         try:
-            # CPU 버전 FAISS 인덱스 로드
+            # FAISS 인덱스 로드
             index = faiss.read_index(embedding_path)
             print(f"   Successfully loaded index containing {index.ntotal} vectors.")
         except Exception as e:
@@ -70,8 +69,6 @@ def evaluate_biencoder_model(model, full_df, test_df, evaluate_config: Dict):
     
     # 3. Retrieval (FAISS Search)
     print("3. Searching & Scoring...")
-    
-    # D: Distances (유사도 점수), I: Indices (문서 ID)
     D, I = index.search(query_embeddings, top_k)
     
     # 4. Score Calculation (Recall@K)
@@ -79,13 +76,55 @@ def evaluate_biencoder_model(model, full_df, test_df, evaluate_config: Dict):
     query_indices = query_subset.index.tolist()
     
     for i, true_doc_id in enumerate(query_indices):
-
         predicted_ids = I[i]
-        
         if true_doc_id in predicted_ids:
             correct_count += 1
             
     recall = correct_count / len(query_subset)
     print(f"\n📈 [Result] Recall@{top_k}: {recall:.4f}")
+    
+    return recall
+
+
+def evalute_two_stage_model(model, full_df, test_df, evaluate_config: Dict):
+    """Two-Stage (Bi + Cross) 모델 전용 평가 함수"""
+    top_k = evaluate_config.get("top_k", 10)
+    retrieval_k = evaluate_config.get("retrieval_k", 50)
+    batch_size = evaluate_config.get("batch_size", 256)
+    
+    print(f"\n[Evaluation] Start Evaluation @ K={top_k}")
+    
+    # 1. Corpus Indexing (Bi-Encoder용 벡터 생성)
+    print(f"1. Indexing Corpus ({len(full_df)} docs)...")
+    all_docs = full_df['combined_text'].tolist()
+    model.index_corpus(all_docs, batch_size=batch_size)
+    
+    # 2. Query Preparation
+    query_subset = test_df[test_df['pseudo_query'].notna()]
+    if len(query_subset) == 0:
+        return 0.0
+    
+    print(f"2. Searching & Reranking ({len(query_subset)} queries)...")
+    
+    correct_count = 0
+    
+    # 3. Loop & Evaluate
+    for idx, row in tqdm(query_subset.iterrows(), total=len(query_subset)):
+        query = row['pseudo_query']
+        true_doc_id = idx
+        
+        # model의 search 메서드 호출
+        results = model.search(
+            query=query, 
+            top_k_retrieval=retrieval_k, 
+            top_k_rerank=top_k
+        )
+        
+        predicted_ids = [res['corpus_id'] for res in results]
+        if true_doc_id in predicted_ids:
+            correct_count += 1
+            
+    recall = correct_count / len(query_subset)
+    print(f"\n📈 [Result] Two-Stage Recall@{top_k}: {recall:.4f}")
     
     return recall
