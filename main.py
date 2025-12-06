@@ -33,7 +33,7 @@ def load_json(file_path: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="와인 리뷰 데이터셋 다운로드 및 전처리")
+    parser = argparse.ArgumentParser(description="데이터 전처리, 모델 학습, 평가를 수행하는 end-to-end 스크립트")
     parser.add_argument("--config", type=str, default=CONFIG_PATH, help="config 파일 경로")
     parser.add_argument("--gen-query", type=str, default=GEN_QUERY_CONFIG_PATH, help="pseudo query 생성 config 파일 경로")
     parser.add_argument("--local-test", type=bool, default=False, help="로컬 테스트 모드 여부")
