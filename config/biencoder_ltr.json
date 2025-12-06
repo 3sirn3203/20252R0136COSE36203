@@ -17,7 +17,7 @@
     },
     "model": {
         "type": "baseline-bi-encoder",
-        "path": "src/model/biencoder_learning.py",
+        "path": "src/model/biencoder_ltr.py",
         "model_name": "all-mpnet-base-v2",
         "max_seq_length": 256
     },
@@ -33,14 +33,14 @@
         "use_amp": true,
         "loss_function": "TripletLoss",
         "triplet_margin": 0.5,
-        "output_dir": "models/bi-encoder-trained",
+        "output_dir": "models/biencoder_ltr_trained",
         "eval_steps": 500,
         "save_best_model": true
     },
     "evaluate": {
         "top_k": 10,
         "batch_size": 256,
-        "embedding_path": "data/embeddings/baseline_faiss.index"
+        "embedding_path": "data/embeddings/biencoder_ltr_faiss.index"
     },
     "device": "cuda",
     "random_state": 42

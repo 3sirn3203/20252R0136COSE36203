@@ -42,7 +42,7 @@ def create_model(model_config: dict,
     use_amp = train_config.get("use_amp", True)
     loss_function = train_config.get("loss_function", "TripletLoss")
     triplet_margin = train_config.get("triplet_margin", 0.5)
-    output_dir = train_config.get("output_dir", "models/bi-encoder-trained")
+    output_dir = train_config.get("output_dir", "models/biencoder_ltr_trained")
     eval_steps = train_config.get("eval_steps", 500)
     save_best_model = train_config.get("save_best_model", True)
 

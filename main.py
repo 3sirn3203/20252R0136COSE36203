@@ -19,7 +19,7 @@ load_dotenv()
 warnings.filterwarnings("ignore", category=UserWarning, module='pydantic')
 
 DATA_PATH = "data/winemag-data-130k-v2.csv"
-CONFIG_PATH = "config/baseline_config.json"
+CONFIG_PATH = "config/biencoder_baseline.json"
 QUERY_PATH = "data/pseudo_queries.csv"
 
 
