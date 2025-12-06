@@ -89,7 +89,7 @@ if __name__ == "__main__":
     set_seed(random_state)
 
     if not os.path.exists(data_path):
-        download_dataset(data_path)
+        download_dataset()
 
     df = pd.read_csv(data_path)
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         per_device_eval_batch_size=batch_size,
         learning_rate=learning_rate,
         weight_decay=weight_decay,
-        evaluation_strategy=eval_save_strategy,
+        logging_strategy=eval_save_strategy,
         save_strategy=eval_save_strategy,
         save_total_limit=2,
         fp16=torch.cuda.is_available(),

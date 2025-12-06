@@ -66,12 +66,12 @@ if __name__ == "__main__":
         device = "cpu"
 
     # 데이터 파일이 존재하지 않으면 다운로드
-    if not os.path.exists(DATA_PATH):
+    if not os.path.exists(data_path):
         download_dataset()
     
     # 데이터 불러오기
-    df = pd.read_csv(DATA_PATH)
-
+    df = pd.read_csv(data_path)
+    
     # 데이터 전처리
     df_preprocessed = preprocess_data(df)
     df_preprocessed = df_preprocessed.reset_index(drop=True)

@@ -8,7 +8,7 @@
         "max_seq_length": 256,
         "batch_size": 16,
         "epochs": 3,
-        "learning_rate": 3e-5,
+        "learning_rate": 4e-5,
         "mlm_probability": 0.15,
         "weight_decay": 0.01,
         "eval_save_strategy": "epoch",
