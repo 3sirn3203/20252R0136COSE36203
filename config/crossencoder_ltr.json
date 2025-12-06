@@ -44,7 +44,6 @@
             "scheduler": "WarmupLinear",
             "warmup_steps": 1000,
             "train_batch_size": 8,
-            "gradient_accumulation": 4,
             "pos_neg_ratio": 4,
             "weight_decay": 0.01,
             "max_grad_norm": 1.0,

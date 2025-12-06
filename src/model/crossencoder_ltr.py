@@ -56,26 +56,20 @@ class TwoStageRetriever:
         if self.corpus_embeddings is None:
             raise ValueError("Corpus is not indexed. Call index_corpus() first.")
 
-        # --- Stage 1: Retrieval ---
+        # 1. Bi-Encoder로 후보 문서 추출
         query_emb = self.bi_encoder.encode(query, convert_to_tensor=True, normalize_embeddings=True)
-        # util.semantic_search는 GPU 가속 활용
         hits = util.semantic_search(query_emb, self.corpus_embeddings, top_k=top_k_retrieval)[0]
 
-        # Stage 1 결과 추출
         candidate_indices = [hit['corpus_id'] for hit in hits]
         candidate_docs = [self.documents[idx] for idx in candidate_indices]
 
-        # --- Stage 2: Re-ranking ---
-        # Cross-Encoder 입력쌍 생성: [[Query, Doc1], [Query, Doc2], ...]
+        # 2. Cross-Encoder로 후보 문서 재순위화
         cross_input = [[query, doc] for doc in candidate_docs]
         
-        # 정밀 채점
         scores = self.cross_encoder.predict(cross_input)
-
-        # 점수 기준 내림차순 정렬
         sorted_indices = np.argsort(scores)[::-1]
 
-        # 최종 결과 구성
+        # 최종 결과
         final_results = []
         for idx in sorted_indices[:top_k_rerank]:
             original_idx = candidate_indices[idx]
@@ -102,7 +96,6 @@ def train_cross_encoder(model_config: Dict, train_config: Dict, train_triplets, 
     scheduler = train_config.get("scheduler", "WarmupLinear")
     warmup_steps = train_config.get("warmup_steps", 1000)
     train_batch_size = train_config.get("train_batch_size", 16)
-    gradient_accumulation = train_config.get("gradient_accumulation", 1)
     pos_neg_ratio = train_config.get("pos_neg_ratio", 4)
     weight_decay = train_config.get("weight_decay", 0.01)
     max_grad_norm = train_config.get("max_grad_norm", 1.0)
@@ -150,8 +143,11 @@ def train_cross_encoder(model_config: Dict, train_config: Dict, train_triplets, 
     # Evaluator 생성
     print("Setting up evaluator...")
     val_samples = []
+
     # Validation 데이터 샘플링 (속도를 위해 일부만 사용)
-    val_subset = val_df[val_df['pseudo_query'].notna()].sample(min(500, len(val_df)))
+    val_queries_df = val_df[val_df['pseudo_query'].notna()]
+    sample_size = min(500, len(val_queries_df))
+    val_subset = val_queries_df.sample(n=sample_size, random_state=42)
     all_docs = val_df['combined_text'].tolist()
     
     for _, row in val_subset.iterrows():
@@ -187,7 +183,6 @@ def train_cross_encoder(model_config: Dict, train_config: Dict, train_triplets, 
         weight_decay=weight_decay,
         scheduler=scheduler,
         warmup_steps=warmup_steps,
-        gradient_accumulation_steps=gradient_accumulation,
         max_grad_norm=max_grad_norm,
         use_amp=use_amp,
         output_path=output_dir,
