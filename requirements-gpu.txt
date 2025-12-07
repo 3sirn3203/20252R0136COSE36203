@@ -1,0 +1,8 @@
+pandas
+scikit-learn
+kagglehub
+python-dotenv
+torch
+sentence-transformers
+google-generativeai
+faiss-gpu-cu12
