@@ -7,7 +7,7 @@
 - 평가 시 FAISS 인덱스 또는 bi+cross 재순위화를 이용해 Recall@K를 출력합니다.
 
 ## 실행 방법
-1) Python 3.10+ 가상환경 생성 및 패키지 설치  
+1) Python 3 가상환경 생성 및 패키지 설치  
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
@@ -33,3 +33,10 @@
 - `--config <path>`: 학습/평가 파이프라인 전체 설정 파일 경로. 모델 타입(`single-stage-retriever`, `two-stage-retriever`), 데이터 분할, 학습/평가 하이퍼파라미터 및 출력 경로를 정의합니다. 기본값 `config/biencoder_baseline.json`.
 - `--gen-query <path>`: pseudo query 생성 설정 파일 경로. `enable`을 `true`로 하면 Gemini로 쿼리를 생성해 `output_path`에 저장하며, `model_name`, `temperature`, `batch_size`, `max_rows` 등을 제어합니다. 기본값 `config/generate_query.json`.
 - `--local-test <bool>`: 로컬 테스트 플래그(현재 로직에서는 주로 구성 확인용). 기본값 `False`.
+
+
+## MLM 파인튜닝 모듈 (./fine_tune.py) 사용법
+
+```bash
+python -m fine_tune --config config/fine_tune_mlm.json
+```
